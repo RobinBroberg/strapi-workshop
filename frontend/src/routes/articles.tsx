@@ -1,39 +1,42 @@
-import { createFileRoute } from "@tanstack/react-router";
-import {
-  BlocksRenderer,
-  type BlocksContent,
-} from "@strapi/blocks-react-renderer";
-
-type Article = {
-  id: number;
-  title: string;
-  content: BlocksContent;
-  category: string;
-};
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { BlocksRenderer } from "@strapi/blocks-react-renderer";
+import { Article } from "@/types";
 
 export const Route = createFileRoute("/articles")({
-  // @ts-expect-error
   loader: async () => {
     const res = await fetch("http://localhost:1337/api/articles");
     const data = await res.json();
-    return { articles: data.data as Article[] };
+    return { articles: data.data } satisfies { articles: Article[] };
   },
   component: ArticlesPage,
 });
 
 function ArticlesPage() {
-  const { articles } = Route.useLoaderData() as { articles: Article[] };
+  const { articles } = Route.useLoaderData();
 
   return (
-    <main className="mx-auto p-6">
-      <h1>Articles</h1>
-      <ul className="prose space-y-12 list-none p-0 m-0">
-        {articles.map((a) => (
-          <li key={a.id}>
-            <article>
-              <h2>{a.title}</h2>
-              <BlocksRenderer content={a.content || []} />
-            </article>
+    <main className="mx-auto max-w-6xl p-6 min-h-screen">
+      <h1 className="text-3xl font-bold mb-8 text-gray-800">Articles</h1>
+
+      <ul className="columns-1 sm:columns-2 gap-6 space-y-6">
+        {articles.map((a: Article) => (
+          <li key={a.id} className="break-inside-avoid mb-6">
+            <Link
+              to="/articles/$slug"
+              params={{ slug: a.slug }}
+              className="block rounded-2xl bg-white shadow-xl  transition-all duration-200 hover:-translate-y-1 overflow-hidden"
+            >
+              <article>
+                <header className="p-5 border-b border-gray-100">
+                  <h2 className="text-xl font-semibold leading-tight text-gray-800">
+                    {a.title}
+                  </h2>
+                </header>
+                <div className="prose prose-sm p-5 text-gray-600">
+                  <BlocksRenderer content={a.content || []} />
+                </div>
+              </article>
+            </Link>
           </li>
         ))}
       </ul>
